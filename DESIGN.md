@@ -265,7 +265,7 @@ Routine の再実行や手動実行で、顧客も見る可能性のあるチャ
 
 | 項目 | 値 | 理由 |
 |---|---|---|
-| cron | `57 22 * * 0-4` | **UTC指定**。22:57 UTC = 翌07:57 JST。日〜木 UTC = 月〜金 JST（平日のみ） |
+| cron | `45 23 * * 0-4` | **UTC指定**。23:45 UTC = 翌08:45 JST。日〜木 UTC = 月〜金 JST（平日のみ）<br>※当初 `57 22`（07:57 JST）で作成したが、運用側で08:45 JSTに変更 |
 | create_new_session_on_fire | `true` | 毎回クリーンな状態で実行。会話履歴に依存しない |
 | connectors | `["FFDE", "Slack"]` | データ取得と投稿に必要な最小構成 |
 | notifications | `{push: true}` | **自分への実質的なリマインド経路**（§5参照） |
@@ -281,18 +281,21 @@ Routine の再実行や手動実行で、顧客も見る可能性のあるチャ
 | 項目 | 実際の値 |
 |---|---|
 | trigger_id | `trig_01Fkj6ipZ111MJTeBoZPqCAr` |
-| cron | `57 22 * * 0-4`（UTC）＝ 平日 07:57 JST |
-| 状態 | **無効化中**（コネクタ未付与のため。§12参照） |
+| cron | `45 23 * * 0-4`（UTC）＝ 平日 08:45 JST |
+| コネクタ | FFDE / Slack（付与済み・確認済み） |
+| 通知 | プッシュ通知 ON |
+| 状態 | **有効** |
 
-### ⚠️ 未解決：Routineにコネクタを付与できない
+### コネクタ付与についての注意（ハマりどころ）
 
-`create_trigger` の `connectors` パラメータが**この組織では利用不可**（`connectors parameter is
-not available for this organization`）。コネクタ無しで登録すると、発火したセッションは
-`mcp__*` ツールを一切持たず、**FFDE（ClickHouse）もSlackも使えないため機能しない**。
+`create_trigger` ツールの `connectors` パラメータは**この組織では利用できない**
+（`connectors parameter is not available for this organization`）。ツール経由で作成した
+Routineはコネクタ無しで登録され、発火したセッションは `mcp__*` ツールを一切持たないため
+**FFDEもSlackも使えず機能しない**。
 
-このため登録直後に `enabled=false` で停止させている。有効化の前に、claude.ai の
-Routines UI から当該Routineに **FFDE** と **Slack** のコネクタを付与する必要がある。
-UI側で付与できない場合は、Routine自体をUIから作り直す（cronとプロンプトは上記を流用）。
+対処：**claude.ai の Routines UI から当該Routineに FFDE と Slack を付与する**。
+付与後は `update_trigger` / `list_triggers` のレスポンスに `mcp_connections` が現れるので、
+そこで実際に紐づいたか確認できる。今後同様のRoutineを作る際も同じ手順が必要。
 
 ### スキルの置き場所
 
